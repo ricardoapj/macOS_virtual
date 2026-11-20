@@ -1,0 +1,19 @@
+name: Teste Mac
+on: workflow_dispatch
+jobs:
+  teste:
+    runs-on: macos-latest
+    steps:
+      - name: Qual Mac é este
+        run: sw_vers && xcodebuild -version && sysctl -n machdep.cpu.brand_string
+      - name: Compilar shader Metal
+        run: |
+          xcodebuild -downloadComponent MetalToolchain || true
+          printf '#include <metal_stdlib>\nusing namespace metal;\nkernel void dobra(device float *v [[buffer(0)]], uint i [[thread_position_in_grid]]) { v[i] *= 2; }\n' > s.metal
+          xcrun -sdk iphoneos metal -c s.metal -o s.air
+          xcrun -sdk iphoneos metallib s.air -o default.metallib
+          ls -l default.metallib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: metallib
+          path: default.metallib
